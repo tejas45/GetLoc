@@ -1,0 +1,94 @@
+﻿<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head runat="server">
+    <title></title>
+    <script src="http://ajax.aspnetcdn.com/ajax/jquery/jquery-1.9.0.js"></script>
+    <!--<script src="http://maps.googleapis.com/maps/api/js?key=AIzaSyD1Butl4_Zk9Emk35UMfxQbs_MPX3Xf-9I" type="text/javascript"></script>-->
+
+    <script src="http://maps.googleapis.com/maps/api/js?sensor=false"></script>
+
+    <script type="text/javascript">
+
+        function GetLocation() {
+            //$('[id*=btnSubmit]').prop('disabled', true);
+            var currentLatLng;
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(showPosition, showError);
+            }
+            else { $("#message").html("Geolocation is not supported by this browser."); }
+        }
+        function showPosition(position) {
+            console.log(position, "Position");
+            currentLatLng = position.coords;
+            var LatLng = new google.maps.LatLng(position.coords.latitude, position.coords.longitude);
+            var latlon = "Latitude = " + currentLatLng.latitude + "<br/>" + "Longitude = " + currentLatLng.longitude;
+            $("#message").html(latlon);
+           // $("[id*=hdnLocation]").val(currentLatLng.longitude + " " + currentLatLng.latitude);
+            $('[id*=btnSubmit]').prop('disabled', false);
+
+            codeLatLng(currentLatLng.latitude, currentLatLng.longitude);
+
+            var mapOptions = {
+                center: LatLng,
+                zoom: 17,
+                mapTypeId: google.maps.MapTypeId.ROADMAP
+            };
+            var map = new google.maps.Map(document.getElementById("divMap"), mapOptions);
+            var marker = new google.maps.Marker({
+                position: LatLng,
+                map: map,
+                title: "<div style = 'height:60px;width:200px'><b>Your location:</b><br />Latitude: " + position.coords.latitude + "<br />Longitude: " + position.coords.longitude
+            });
+            google.maps.event.addListener(marker, "click", function (e) {
+                var infoWindow = new google.maps.InfoWindow();
+                infoWindow.setContent(marker.title);
+                infoWindow.open(map, marker);
+            });
+
+        }
+        function showError(error) {
+            if (error.code == 1) {
+                $("#message").html("User denied the request for Geolocation.");
+            }
+            else if (error.code == 2) {
+                $("#message").html("Location information is unavailable.");
+            }
+            else if (error.code == 3) {
+                $("#message").html("The request to get user location timed out.");
+            }
+            else {
+                $("#message").html("An unknown error occurred.");
+            }
+        }
+        function codeLatLng(lat, lng) {
+            var geocoder = new google.maps.Geocoder();
+            var latlng = new google.maps.LatLng(lat, lng);
+            geocoder.geocode({ 'latLng': latlng }, function (results, status) {
+                console.log(results, "Result");
+                console.log(status, "Status");
+                if (status == google.maps.GeocoderStatus.OK) {
+                    console.log(results)
+                    if (results[1]) {
+                        //formatted address
+                        var address = results[0].formatted_address;
+                        $('#paddress').html("Address = " + address);
+                    } else {
+                        $('#paddress').html("No results found");
+                    }
+                } else {
+                    $('#paddress').html("Geocoder failed due to: " + status);
+                }
+            });
+        }
+    </script>
+</head>
+<body>
+    <form id="form1" style="font-family:'Lucida Sans', 'Lucida Sans Regular', 'Lucida Grande', 'Lucida Sans Unicode', Geneva, Verdana, sans-serif;font-size:larger;  ">
+        <input id="Button1" type="button" value="Get My Place" onclick="GetLocation();" />
+        <div id="divMap" style="width: 600px; height: 400px;"></div>
+        <br />
+        <p id="message"></p>
+        <p id='paddress'></p>
+    </form>
+</body>
+</html>
